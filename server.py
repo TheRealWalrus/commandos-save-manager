@@ -10,6 +10,27 @@ def broadcast(message, connections):
             # Remove the client if unable to send the message
             connections.remove(client_socket)
 
+
+def receive_file(conn, filename):
+    print(f'> receive_file')
+    with open(filename, 'wb') as file:
+        data = conn.recv(1024)
+        while data:
+            file.write(data)
+            data = conn.recv(1024)
+    print(f'< receive_file')
+
+
+def save():
+    for client_socket in connections:
+        try:
+            client_socket.send('save'.encode())
+            receive_file(client_socket, 'REDTMP')
+        except:
+            # Remove the client if unable to send the message
+            connections.remove(client_socket)
+
+
 connections = []
 
 
@@ -38,4 +59,7 @@ while True:
     print("Enter message to send to client:")
     user_input = input()
     print(f"user_input: {user_input}")
-    broadcast(user_input, connections)
+    if user_input == 'save':
+        save()
+    else:
+        print('Invalid input!')

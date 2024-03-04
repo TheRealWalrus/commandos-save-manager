@@ -1,37 +1,70 @@
 import socket
-import threading
+import constants
+from configparser import ConfigParser
 
-def receive_messages(client_socket):
+def send_file(client_socket):
+    with open(constants.save_file_path, 'rb') as file:
+        data = file.read(1024)
+        while data:
+            client_socket.send(data)
+            data = file.read(1024)
+
+def load(client_socket):
+    # TODO: impl
+    pass
+
+
+def run_client(client_socket):
     while True:
         try:
             data = client_socket.recv(1024)
-            if not data:
-                break
-            print(f"Received message: {data.decode()}")
-        except:
+            message = data.decode()
+            print(f"Received message: {message}")
+
+            if message == 'save':
+                send_file(client_socket)
+            elif message == 'load':
+                load(client_socket)
+            else:
+                print('Command not supported!')
+
+        except Exception as e:
+            print(e)
             break
 
-def start_client():
-    host = 'localhost'  # Change this to the server's IP address or hostname
-    port = 12345  # Use the same port as the server
+
+def get_server_ip():
+    config = ConfigParser()
+    config.read('config.ini')
+
+    ip = config.get('Network', 'ip')
+    print(f"Previous server IP was {ip}, press ENTER or provide new IP")
+    # TODO: add input validation
+    user_input = input()
+
+    if user_input == "":
+        return ip
+
+    config.set('Network', 'ip', user_input)
+    with open('config.ini', 'w') as config_file:
+        config.write(config_file)
+
+    return ip
+
+
+def start_client(server_ip: str):
+    config = ConfigParser()
+    config.read('config.ini')
+    port = int(config.get('Network', 'port'))
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host, port))
+    client_socket.connect((server_ip, port))
+    print("connected")
 
-    # Create a thread to receive messages from the server
-    receive_thread = threading.Thread(target=receive_messages, args=(client_socket,))
-    receive_thread.start()
+    with client_socket:
+        run_client(client_socket)
 
-    while True:
-        message = input("Enter message to send to server (or 'exit' to quit): ")
-        if message.lower() == 'exit':
-            break
-        try:
-            client_socket.send(message.encode())
-        except:
-            break
-
-    client_socket.close()
 
 if __name__ == "__main__":
-    start_client()
+    server_ip = get_server_ip()
+    start_client(server_ip)
