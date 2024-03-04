@@ -12,13 +12,17 @@ def broadcast(message, connections):
 
 
 def receive_file(conn, filename):
-    print(f'> receive_file')
-    with open(filename, 'wb') as file:
-        data = conn.recv(1024)
-        while data:
-            file.write(data)
-            data = conn.recv(1024)
-    print(f'< receive_file')
+    # Receive file size
+    file_size = int.from_bytes(conn.recv(4), byteorder='big')
+
+    # Receive file data
+    received_data = b''
+    while len(received_data) < file_size:
+        received_data += conn.recv(1024)
+
+    # Save the received file
+    with open(filename, 'wb') as received_file:
+        received_file.write(received_data)
 
 
 def save():

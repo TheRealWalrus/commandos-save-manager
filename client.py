@@ -4,10 +4,10 @@ from configparser import ConfigParser
 
 def send_file(client_socket):
     with open(constants.save_file_path, 'rb') as file:
-        data = file.read(1024)
-        while data:
-            client_socket.send(data)
-            data = file.read(1024)
+        file_data = file.read()
+        file_size = len(file_data).to_bytes(4, byteorder='big')
+        client_socket.send(file_size)
+        client_socket.sendall(file_data)
 
 def load(client_socket):
     # TODO: impl
