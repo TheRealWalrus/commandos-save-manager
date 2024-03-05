@@ -1,17 +1,11 @@
+import os
 import socket
 import threading
 
-# Function to broadcast a message to all connected clients
-def broadcast(message, connections):
-    for client_socket in connections:
-        try:
-            client_socket.send(message.encode())
-        except:
-            # Remove the client if unable to send the message
-            connections.remove(client_socket)
+connections = []
 
 
-def receive_file(conn, filename):
+def receive_file(conn, path):
     # Receive file size
     file_size = int.from_bytes(conn.recv(4), byteorder='big')
 
@@ -21,21 +15,21 @@ def receive_file(conn, filename):
         received_data += conn.recv(1024)
 
     # Save the received file
-    with open(filename, 'wb') as received_file:
+    with open(path, 'wb') as received_file:
         received_file.write(received_data)
 
 
-def save():
-    for client_socket in connections:
+def save(name: str):
+    for count, client_socket in enumerate(connections):
+        player = f"player{count + 1}"
+        path = os.path.join('saves', 'tmp', player)
+        os.makedirs(path, exist_ok = True)
         try:
             client_socket.send('save'.encode())
-            receive_file(client_socket, 'REDTMP')
+            receive_file(client_socket, os.path.join(path, 'REDTMP'))
         except:
             # Remove the client if unable to send the message
             connections.remove(client_socket)
-
-
-connections = []
 
 
 # Main server function
@@ -64,6 +58,6 @@ while True:
     user_input = input()
     print(f"user_input: {user_input}")
     if user_input == 'save':
-        save()
+        save('default')
     else:
         print('Invalid input!')
