@@ -19,7 +19,7 @@ def run_client(client_socket):
         try:
             data = client_socket.recv(1024)
             message = data.decode()
-            print(f"Received message: {message}")
+            # print(f"Received message: {message}")
 
             if message == 'save':
                 send_file(client_socket)

@@ -1,6 +1,8 @@
 import os
+import shutil
 import socket
 import threading
+from client import start_client
 
 connections = []
 
@@ -20,16 +22,24 @@ def receive_file(conn, path):
 
 
 def save(name: str):
+    tmp_path = os.path.join('saves', 'tmp')
+    shutil.rmtree(tmp_path, ignore_errors = True)
+
     for count, client_socket in enumerate(connections):
         player = f"player{count + 1}"
-        path = os.path.join('saves', 'tmp', player)
-        os.makedirs(path, exist_ok = True)
+        player_path = os.path.join(tmp_path, player)
+        os.makedirs(player_path, exist_ok = True)
         try:
             client_socket.send('save'.encode())
-            receive_file(client_socket, os.path.join(path, 'REDTMP'))
+            receive_file(client_socket, os.path.join(player_path, 'REDTMP'))
         except:
             # Remove the client if unable to send the message
             connections.remove(client_socket)
+
+    save_path = os.path.join('saves', name)
+    shutil.rmtree(save_path, ignore_errors = True)
+
+    os.rename(tmp_path, os.path.join('saves', name))
 
 
 # Main server function
@@ -43,21 +53,25 @@ def start_server():
 
     print(f"Server listening on {host}:{port}")
 
-
     while True:
         client_socket, addr = server_socket.accept()
         print(f"Accepted connection from {addr}")
         connections.append(client_socket)
 
-# Start the server
-server_thread = threading.Thread(target=start_server)
-server_thread.start()
 
-while True:
-    print("Enter message to send to client:")
-    user_input = input()
-    print(f"user_input: {user_input}")
-    if user_input == 'save':
-        save('default')
-    else:
-        print('Invalid input!')
+if __name__ == "__main__":
+    # Start the server
+    server_thread = threading.Thread(target=start_server)
+    server_thread.start()
+
+    # client_thread = threading.Thread(target=start_client, args=('127.0.0.1',))
+    # client_thread.start()
+
+    while True:
+        print("Type (S)ave or (L)oad and press ENTER:")
+        user_input = input().lower()
+        if user_input in ('save', 's'):
+            save('default')
+        if user_input in ('load', 'l'):
+            pass
+
