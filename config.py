@@ -8,7 +8,7 @@ class AppConfig:
     
 
     def get(self, section, key):
-        self.config.get(section, key)
+        return self.config.get(section, key)
 
 
     def set(self, section, key, value):

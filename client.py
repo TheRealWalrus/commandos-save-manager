@@ -1,6 +1,7 @@
 import socket
 import constants
-from configparser import ConfigParser
+from config import app_config
+
 
 def send_file(client_socket):
     with open(constants.save_file_path, 'rb') as file:
@@ -9,6 +10,7 @@ def send_file(client_socket):
         client_socket.send(file_size)
         client_socket.sendall(file_data)
 
+
 def load(client_socket):
     # TODO: impl
     pass
@@ -16,28 +18,18 @@ def load(client_socket):
 
 def run_client(client_socket):
     while True:
-        try:
-            data = client_socket.recv(1024)
-            message = data.decode()
-            # print(f"Received message: {message}")
+        data = client_socket.recv(1024)
+        message = data.decode()
+        # print(f"Received message: {message}")
 
-            if message == 'save':
-                send_file(client_socket)
-            elif message == 'load':
-                load(client_socket)
-            else:
-                print('Command not supported!')
-
-        except Exception as e:
-            print(e)
-            break
+        if message == 'save':
+            send_file(client_socket)
+        elif message == 'load':
+            load(client_socket)
 
 
 def get_server_ip():
-    config = ConfigParser()
-    config.read('config.ini')
-
-    ip = config.get('Network', 'ip')
+    ip = app_config.get('network', 'ip')
     print(f"Previous server IP was {ip}, press ENTER or provide new IP")
     # TODO: add input validation
     user_input = input()
@@ -45,21 +37,17 @@ def get_server_ip():
     if user_input == "":
         return ip
 
-    config.set('Network', 'ip', user_input)
-    with open('config.ini', 'w') as config_file:
-        config.write(config_file)
+    app_config.set('network', 'ip', user_input)
 
     return ip
 
 
 def start_client(server_ip: str):
-    config = ConfigParser()
-    config.read('config.ini')
-    port = int(config.get('Network', 'port'))
+    port = int(app_config.get('network', 'port'))
 
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((server_ip, port))
-    print("connected")
+    print(f"Client connected to {server_ip}:{port}")
 
     with client_socket:
         run_client(client_socket)
