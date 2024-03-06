@@ -3,6 +3,7 @@ import shutil
 import socket
 import threading
 from client import start_client
+from config import app_config
 
 connections = []
 
@@ -45,7 +46,7 @@ def save(name: str):
 # Main server function
 def start_server():
     host = '0.0.0.0'  # Listen on all available interfaces
-    port = 12345  # Choose a suitable port
+    port = int(app_config.get())  # Choose a suitable port
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
