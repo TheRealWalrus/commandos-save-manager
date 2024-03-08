@@ -1,5 +1,5 @@
 import os
-from config import app_config
+from src.config import app_config
 
 user_home = os.path.expanduser("~")
 game = app_config.get('misc', 'game')
