@@ -49,6 +49,7 @@ def load(name: str):
     for count, connection in enumerate(connections):
         player = f'player{count + 1}'
         player_save_path = os.path.join(save_path, player, 'REDTMP')
+        connection.send('load'.encode())
         send_file(connection, player_save_path)
 
 
