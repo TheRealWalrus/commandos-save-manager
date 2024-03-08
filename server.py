@@ -5,22 +5,9 @@ import socket
 import threading
 from client import start_client
 from config import app_config
+from network import receive_file
 
 connections = []
-
-
-def receive_file(conn, path):
-    # Receive file size
-    file_size = int.from_bytes(conn.recv(4), byteorder='big')
-
-    # Receive file data
-    received_data = b''
-    while len(received_data) < file_size:
-        received_data += conn.recv(1024)
-
-    # Save the received file
-    with open(path, 'wb') as received_file:
-        received_file.write(received_data)
 
 
 def remove_stale_connections():
@@ -66,7 +53,6 @@ def start_server():
     print(f"Server listening on {host}:{port}")
 
     while True:
-        remove_stale_connections()
         client_socket, addr = server_socket.accept()
         print(f"Accepted connection from {addr}")
         connections.append(client_socket)
@@ -85,6 +71,9 @@ def get_save_name():
     while True:
         print(f'Player count: {player_count}, Last save name was "{latest_save_name}", press ENTER or provide a new one:')
         user_input = input()
+        if user_input == 'tmp':
+            print('"tmp" is invalid save name!')
+            continue
         if is_valid_folder_name(user_input):
             return user_input
         if user_input == '':
@@ -105,4 +94,5 @@ if __name__ == "__main__":
             save_name = get_save_name()
             save(save_name)
         if user_input in ('load', 'l'):
-            pass
+            save_name = get_save_name()
+            load(save_name)

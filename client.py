@@ -1,14 +1,7 @@
 import socket
 import constants
 from config import app_config
-
-
-def send_file(client_socket):
-    with open(constants.save_file_path, 'rb') as file:
-        file_data = file.read()
-        file_size = len(file_data).to_bytes(4, byteorder='big')
-        client_socket.send(file_size)
-        client_socket.sendall(file_data)
+from network import send_file
 
 
 def load(client_socket):
@@ -23,7 +16,7 @@ def run_client(client_socket):
         # print(f"Received message: {message}")
 
         if message == 'save':
-            send_file(client_socket)
+            send_file(client_socket, constants.save_file_path)
         elif message == 'load':
             load(client_socket)
 
