@@ -1,12 +1,8 @@
+import re
 import socket
-import constants
-from config import app_config
-from network import send_file
-
-
-def load(client_socket):
-    # TODO: impl
-    pass
+import src.constants as constants
+from src.config import app_config
+from src.network import send_file, receive_file
 
 
 def run_client(client_socket):
@@ -18,21 +14,26 @@ def run_client(client_socket):
         if message == 'save':
             send_file(client_socket, constants.save_file_path)
         elif message == 'load':
-            load(client_socket)
+            receive_file(client_socket, constants.save_file_path)
+
+
+def is_valid_ip(address):
+    # Allow alphanumeric characters, spaces, underscores, and hyphens
+    pattern = r"^(?:\d{1,3}\.){3}\d{1,3}$"
+    return bool(re.match(pattern, address))
 
 
 def get_server_ip():
     ip = app_config.get('network', 'ip')
-    print(f"Previous server IP was {ip}, press ENTER or provide new IP")
-    # TODO: add input validation
-    user_input = input()
-
-    if user_input == "":
-        return ip
-
-    app_config.set('network', 'ip', user_input)
-
-    return ip
+    while True:
+        print(f"Previous server IP was {ip}, press ENTER or provide new IP")
+        user_input = input()
+        if is_valid_ip(user_input):
+            app_config.set('network', 'ip', user_input)
+            return user_input
+        if user_input == "":
+            return ip
+        print('Invald IP address!')
 
 
 def start_client(server_ip: str):

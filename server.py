@@ -4,8 +4,8 @@ import shutil
 import socket
 import threading
 from client import start_client
-from config import app_config
-from network import receive_file
+from src.config import app_config
+from src.network import receive_file, send_file
 
 connections = []
 
@@ -37,9 +37,19 @@ def save(name: str):
     app_config.set('misc', 'last_save_name', name)
 
 
+def get_all_folders(path):
+    return [entry.name for entry in path.iterdir() if entry.is_dir()]
+
+
 def load(name: str):
-    # TODO: impl
-    pass
+    save_path = os.path.join('saves', name)
+    if not os.path.isdir(save_path):
+        print('Save does not exist!')
+        return
+    for count, connection in enumerate(connections):
+        player = f'player{count + 1}'
+        player_save_path = os.path.join(save_path, player, 'REDTMP')
+        send_file(connection, player_save_path)
 
 
 def start_server():
@@ -65,13 +75,18 @@ def is_valid_folder_name(folder_name):
 
 
 def get_save_name():
-    remove_stale_connections()
-    player_count = len(connections)
-    latest_save_name = app_config.get('misc', 'last_save_name')
     while True:
-        print(f'Player count: {player_count}, Last save name was "{latest_save_name}", press ENTER or provide a new one:')
+        remove_stale_connections()
+
+        player_count = len(connections)
+        latest_save_name = app_config.get('misc', 'last_save_name')
+        print(f'Player count: {player_count}')
+        print(f'Last save name was "{latest_save_name}", press ENTER or provide a new one or (C)ancel:')
+
         user_input = input()
-        if user_input == 'tmp':
+        if user_input.lower() in ('cancel', 'c'):
+            break
+        if user_input.lower() == 'tmp':
             print('"tmp" is invalid save name!')
             continue
         if is_valid_folder_name(user_input):
